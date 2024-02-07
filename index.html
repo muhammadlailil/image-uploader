@@ -1,0 +1,13 @@
+<div id="image-uploader">
+</div>
+<link rel="stylesheet" href="image-uploader.css" />
+<script src="image-uploader.js"></script>
+<script>
+     const uploader = new ImageUploader("#image-uploader", {
+          multiple: false,
+          maxUpload: 2,
+          maxSize: 2,
+          name: "input_oke[]",
+          compress: true,
+     });
+</script>
