@@ -49,7 +49,7 @@ class ImageUploader {
           maxUpload: 5,
           maxSize: 2,
           name: 'images[]',
-          defaults : []
+          defaults: []
      }
 
      constructor(selector, config) {
@@ -64,21 +64,21 @@ class ImageUploader {
      install() {
           const hasDefaultImage = this.config.defaults.length
           var htmlButton = this.htmlAddMoreButton()
-          var htmlImageArea = !hasDefaultImage ?  this.htmlImageArea() : ''
+          var htmlImageArea = !hasDefaultImage ? this.htmlImageArea() : ''
           var html = `<div class="image-uploader-area">
                          ${htmlButton}
                          ${htmlImageArea}
                     </div>`
           this.elementUploader.innerHTML = html
           this.listener()
-          
+
           if (this.config.multiple) {
                this.elementUploader.querySelector('.add-more-image').addEventListener('click', () => {
                     this.createNewImageArea()
                })
           }
 
-          if(hasDefaultImage){
+          if (hasDefaultImage) {
                this.createDefaultImage(this.config.defaults)
           }
      }
@@ -115,7 +115,7 @@ class ImageUploader {
           if (currentTotalImage <= maxUpload) {
                var area = this.elementUploader.querySelector('.image-uploader-area')
                var htmlImageArea = this.htmlImageArea()
-               area.insertAdjacentHTML('beforeend',htmlImageArea)
+               area.insertAdjacentHTML('beforeend', htmlImageArea)
                this.listener()
                if (currentTotalImage == maxUpload) {
                     this.elementUploader.querySelector('.add-more-image').setAttribute('disabled', true)
@@ -233,23 +233,33 @@ class ImageUploader {
           var blob = new Blob([u8arr], { type: mime });
           return new File([blob], name);
      }
-     createDefaultImage(images){
+     createDefaultImage(images) {
           var area = this.elementUploader.querySelector('.image-uploader-area')
-          for(var img of images){
+          for (var img of images) {
                var htmlImageArea = this.htmlImageArea(img)
-               area.insertAdjacentHTML('beforeend',htmlImageArea)
+               area.insertAdjacentHTML('beforeend', htmlImageArea)
           }
-          
+
           this.listener()
      }
 
      htmlImageArea(img = null) {
           var displayButton = this.config.multiple ? 'block' : 'none'
           var imgTag = `<img src="" alt="" />`
-          var inputTag = `<input type="hidden" name="value_${this.config.name}"/>`
-          if(img){
+          var inputTag = `<input
+                    type="file"
+                    name="${this.config.name}"
+                    required
+                    accept="image/png,image/gif,image/jpeg,image/svg+xml,image/webp"
+               />
+               <input type="hidden" name="value_${this.config.name}"/>`
+          if (img) {
                imgTag = `<img src="${img.url}" alt="" style="display:block"/>`
-               inputTag = `<input type="hidden" name="value_${this.config.name}" value="${img.value}"/>`
+               inputTag = `<input
+                    type="file"
+                    name="${this.config.name}"
+                    accept="image/png,image/gif,image/jpeg,image/svg+xml,image/webp"
+               /><input type="hidden" name="value_${this.config.name}" value="${img.value}"/>`
           }
           return ` <div class="block-group block-group-image">
                     <div class="image-block-content" draggable="true">
@@ -259,13 +269,7 @@ class ImageUploader {
                          </div>
                          ${imgTag}
                     </div>
-                    <input
-                         type="file"
-                         name="${this.config.name}"
-                         required
-                         accept="image/png,image/gif,image/jpeg,image/svg+xml,image/webp"
-                    />
-                    
+                    ${inputTag}
                     <button type="button" style="display:${displayButton}">
                          ${deleteButtonSvg}
                     </button>
