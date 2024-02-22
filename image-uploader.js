@@ -48,7 +48,8 @@ class ImageUploader {
           width: '300px',
           maxUpload: 5,
           maxSize: 2,
-          name: 'images[]'
+          name: 'images[]',
+          defaults : []
      }
 
      constructor(selector, config) {
@@ -61,14 +62,25 @@ class ImageUploader {
      }
 
      install() {
+          const hasDefaultImage = this.config.defaults.length
           var htmlButton = this.htmlAddMoreButton()
-          var htmlImageArea = this.htmlImageArea()
+          var htmlImageArea = !hasDefaultImage ?  this.htmlImageArea() : ''
           var html = `<div class="image-uploader-area">
                          ${htmlButton}
                          ${htmlImageArea}
                     </div>`
           this.elementUploader.innerHTML = html
           this.listener()
+          
+          if (this.config.multiple) {
+               this.elementUploader.querySelector('.add-more-image').addEventListener('click', () => {
+                    this.createNewImageArea()
+               })
+          }
+
+          if(hasDefaultImage){
+               this.createDefaultImage(this.config.defaults)
+          }
      }
      listener() {
           this.elementUploader.querySelectorAll('.image-block-content').forEach((uploadArea) => {
@@ -87,10 +99,6 @@ class ImageUploader {
                uploadArea.addEventListener("drop", (e) => {
                     this.hadleDragDrop(e, inputFile, uploadArea)
                }, false)
-               uploadArea.addEventListener("click", (e) => {
-                    inputFile.click()
-                    e.preventDefault()
-               })
                inputFile.addEventListener("change", (e) => {
                     const files = e.target.files
                     if (files) {
@@ -99,25 +107,18 @@ class ImageUploader {
                })
                this.listenerDeleteGroupImage(uploadArea)
           })
-          if(this.config.multiple){
-               this.elementUploader.querySelector('.add-more-image').addEventListener('click',()=>{
-                    this.createNewImageArea()
-               })
-          }
      }
 
-     createNewImageArea(){
-          const currentTotalImage =  this.elementUploader.querySelectorAll('.block-group-image').length + 1
-          if(currentTotalImage<=this.config.maxUpload){
+     createNewImageArea() {
+          const currentTotalImage = this.elementUploader.querySelectorAll('.block-group-image').length + 1
+          const maxUpload = this.config.maxUpload || currentTotalImage + 1;
+          if (currentTotalImage <= maxUpload) {
                var area = this.elementUploader.querySelector('.image-uploader-area')
                var htmlImageArea = this.htmlImageArea()
-               var html = area.innerHTML + htmlImageArea;
-               area.innerHTML = ''
-               area.innerHTML = html
-               // area.insertAdjacentHTML('beforeend',htmlImageArea)
+               area.insertAdjacentHTML('beforeend',htmlImageArea)
                this.listener()
-               if(currentTotalImage==this.config.maxUpload){
-                    this.elementUploader.querySelector('.add-more-image').setAttribute('disabled',true)    
+               if (currentTotalImage == maxUpload) {
+                    this.elementUploader.querySelector('.add-more-image').setAttribute('disabled', true)
                }
           }
      }
@@ -173,12 +174,12 @@ class ImageUploader {
           })
      }
 
-     listenerDeleteGroupImage(uploadArea){
-          if(this.config.multiple){
+     listenerDeleteGroupImage(uploadArea) {
+          if (this.config.multiple) {
                const _Self = this
-               uploadArea.closest('.block-group').querySelector('button').addEventListener('click',(e)=>{
+               uploadArea.closest('.block-group').querySelector('button').addEventListener('click', (e) => {
                     e.target.closest('.block-group-image').remove()
-                    _Self.elementUploader.querySelector('.add-more-image').removeAttribute('disabled')    
+                    _Self.elementUploader.querySelector('.add-more-image').removeAttribute('disabled')
                     // _Self.listener()
                })
           }
@@ -232,18 +233,31 @@ class ImageUploader {
           var blob = new Blob([u8arr], { type: mime });
           return new File([blob], name);
      }
+     createDefaultImage(images){
+          var area = this.elementUploader.querySelector('.image-uploader-area')
+          for(var img of images){
+               var htmlImageArea = this.htmlImageArea(img)
+               area.insertAdjacentHTML('beforeend',htmlImageArea)
+          }
+          
+          this.listener()
+     }
 
-
-     
-     htmlImageArea(){
+     htmlImageArea(img = null) {
           var displayButton = this.config.multiple ? 'block' : 'none'
+          var imgTag = `<img src="" alt="" />`
+          var inputTag = `<input type="hidden" name="value_${this.config.name}"/>`
+          if(img){
+               imgTag = `<img src="${img.url}" alt="" style="display:block"/>`
+               inputTag = `<input type="hidden" name="value_${this.config.name}" value="${img.value}"/>`
+          }
           return ` <div class="block-group block-group-image">
                     <div class="image-block-content" draggable="true">
                          <div class="empty">
                               ${imageIconSvg}
                               <div><b>Drag</b> or <b>click</b> to upload image</div>
                          </div>
-                         <img src="" alt="" />
+                         ${imgTag}
                     </div>
                     <input
                          type="file"
@@ -251,6 +265,7 @@ class ImageUploader {
                          required
                          accept="image/png,image/gif,image/jpeg,image/svg+xml,image/webp"
                     />
+                    
                     <button type="button" style="display:${displayButton}">
                          ${deleteButtonSvg}
                     </button>
